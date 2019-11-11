@@ -88,19 +88,13 @@ The key features of the Onion Dinastycoin Blockchain Explorer are:
 
 Current development branch:
 
- - https://github.com/dinastycoinexamples/onion-dinastycoin-blockchain-explorer/tree/devel
+ - https://github.com/dinastyoffreedom/newdinastycoin-explorer.git
 
 Note: `devel` branch of the explorer follows `master` branch of the dinastycoin.
 
 ## Compilation on Ubuntu 16.04/18.04
 
 
-#### Dinastycoin download and compilation
-
-To download and compile recent Dinastycoin follow instructions
-in the following link:
-
-https://github.com/dinastycoinexamples/dinastycoin-compilation/blob/master/README.md
 
 ##### Compile and run the explorer
 
@@ -112,10 +106,10 @@ as follows:
 cd ~
 
 # download the source code 
-git clone https://github.com/dinastycoinexamples/onion-dinastycoin-blockchain-explorer.git
+git clone https://github.com/dinastyoffreedom/newdinastycoin-explorer.git
 
 # enter the downloaded sourced code folder
-cd onion-dinastycoin-blockchain-explorer
+cd newdinastycoin-explorer
 
 # make a build folder and enter it
 mkdir build && cd build
@@ -145,7 +139,7 @@ For example:
 Example output:
 
 ```bash
-[ubuntu@arch onion-dinastycoin-blockchain-explorer]$ ./dcyblocks
+[ubuntu@arch newdinastycoin-explorer]$ ./dcyblocks
 2016-May-28 10:04:49.160280 Blockchain initialized. last block: 1056761, d0.h0.m12.s47 time ago, current difficulty: 1517857750
 (2016-05-28 02:04:49) [INFO    ] Crow/0.1 server is running, local port 8081
 ```
@@ -155,7 +149,7 @@ Go to your browser: http://127.0.0.1:8081
 ## The explorer's command line options
 
 ```
-dcyblocks, Onion Dinastycoin Blockchain Explorer:
+dcyblocks, New Dinastycoin Blockchain Explorer:
   -h [ --help ] [=arg(=1)] (=0)         produce help message
   -t [ --testnet ] [=arg(=1)] (=0)      use testnet blockchain
   -s [ --stagenet ] [=arg(=1)] (=0)     use stagenet blockchain
@@ -778,7 +772,7 @@ Example result not shown.
 
 ## Other dinastycoin examples
 
-Other examples can be found on  [github](https://github.com/dinastycoinexamples?tab=repositories).
+Other examples can be found on  [github](https://github.com/dinastyoffreedom?tab=repositories).
 Please know that some of the examples/repositories are not
 finished and may not work as intended.
 
