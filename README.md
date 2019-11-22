@@ -1,4 +1,4 @@
-# Onion Dinastycoin Blockchain Explorer
+# Dinastycoin Blockchain Explorer
 
 Currently available Dinastycoin blockchain explorers have several limitations which are of
 special importance to privacy-oriented users:
@@ -13,7 +13,7 @@ special importance to privacy-oriented users:
 
 
 In this example, these limitations are addressed by development of
-an Onion Dinastycoin Blockchain Explorer. The example not only shows how to use
+an Dinastycoin Blockchain Explorer. The example not only shows how to use
 Dinastycoin C++ libraries, but also demonstrates how to use:
 
  - [crow](https://github.com/ipkn/crow) - C++ micro web framework
@@ -21,48 +21,11 @@ Dinastycoin C++ libraries, but also demonstrates how to use:
  - [json](https://github.com/nlohmann/json) - JSON for Modern C++
  - [fmt](https://github.com/fmtlib/fmt) - Small, safe and fast string formatting library
 
-## Explorer hosts
-
-Tor users:
-
- - [http://dvwae436pd7nt4bc.onion](http://dvwae436pd7nt4bc.onion) (Down for now: front-end templates are [maintained by @suhz](https://github.com/suhz/onion-dinastycoin-blockchain-explorer/tree/dinastycoinexplorer.com/src/templates)).
-
-Clearnet versions:
- - [https://xmrchain.net/](https://xmrchain.net/) - https enabled, most popular and very stable.
- - [https://dinastycoinhash.com/explorer/](https://dinastycoinhash.com/explorer/) - nice looking one, https enabled.
- - [http://explore.DinastycoinWorld.com](http://explore.dinastycoinworld.com) - same as the second one.
- - [http://dinastycoinchain.com/](http://dinastycoinchain.com/) - JSON API based, multiple nodes.   
- - [https://blox.minexmr.com/](https://blox.minexmr.com/) - - https enabled.
- - [https://community.dcy.to/explorer/mainnet/](https://community.dcy.to/explorer/mainnet/)
- - [https://exp.dcy.sk/](https://exp.dcy.sk/)
 
 
-Testnet version:
+## Dinastycoin Blockchain Explorer features
 
- - [https://testnet.xmrchain.com/](https://testnet.xmrchain.com/) - https enabled.
- - [https://community.dcy.to/explorer/testnet/](https://community.dcy.to/explorer/testnet/)
-
-Stagenet version:
- 
- - [https://stagenet.xmrchain.net/](https://stagenet.xmrchain.net/)
- - [http://139.162.60.17:8082/](http://139.162.60.17:8082/) 
- - [http://162.210.173.150:8083/](http://162.210.173.150:8083/)
- - [https://community.dcy.to/explorer/stagenet/](https://community.dcy.to/explorer/stagenet/)
-
-i2p users (main Dinastycoin network):
-
- - [http://7o4gezpkye6ekibhgpkg7v626ze4idsirapufzrefkdysa6zxhha.b32.i2p/](http://7o4gezpkye6ekibhgpkg7v626ze4idsirapufzrefkdysa6zxhha.b32.i2p/)
-
-Alternative block explorers:
-
-- [http://dinastycoinblocks.info](http://dinastycoinblocks.info/)
-- [https://dinastycoinvision.com](https://dinastycoinvision.com)
-- [http://chainradar.com](http://chainradar.com/dcy/blocks)
-
-
-## Onion Dinastycoin Blockchain Explorer features
-
-The key features of the Onion Dinastycoin Blockchain Explorer are:
+The key features of the Dinastycoin Blockchain Explorer are:
 
  - no cookies, no web analytics trackers, no images,
  - open sourced,
@@ -84,17 +47,24 @@ The key features of the Onion Dinastycoin Blockchain Explorer are:
  - listing RandomX code for each block
 
 
-## Development branch
-
-Current development branch:
-
- - https://github.com/dinastyoffreedom/newdinastycoin-explorer.git
-
-Note: `devel` branch of the explorer follows `master` branch of the dinastycoin.
 
 ## Compilation on Ubuntu 16.04/18.04
 
 
+#### Dinastycoin download and compilation
+
+# first install dinastycoin dependecines
+sudo apt update
+
+sudo apt install git build-essential cmake libboost-all-dev miniupnpc libunbound-dev graphviz doxygen libunwind8-dev pkg-config libssl-dev libcurl4-openssl-dev libgtest-dev libreadline-dev libzmq3-dev libsodium-dev libhidapi-dev libhidapi-libusb0
+
+# go to home folder
+cd ~
+git clone --recursive https://github.com/dinastyoffreedom/newDinasty.git dinastycoin
+
+cd dinastycoin/
+
+USE_SINGLE_BUILDDIR=1 make
 
 ##### Compile and run the explorer
 
@@ -106,10 +76,10 @@ as follows:
 cd ~
 
 # download the source code 
-git clone https://github.com/dinastyoffreedom/newdinastycoin-explorer.git
+git clone https://github.com/dinastyoffreedom/dinastycoin-blockchain-explorer.git
 
 # enter the downloaded sourced code folder
-cd newdinastycoin-explorer
+cd dinastycoin-blockchain-explorer
 
 # make a build folder and enter it
 mkdir build && cd build
@@ -139,7 +109,7 @@ For example:
 Example output:
 
 ```bash
-[ubuntu@arch newdinastycoin-explorer]$ ./dcyblocks
+[ubuntu@arch dinastycoin-blockchain-explorer]$ ./dcyblocks
 2016-May-28 10:04:49.160280 Blockchain initialized. last block: 1056761, d0.h0.m12.s47 time ago, current difficulty: 1517857750
 (2016-05-28 02:04:49) [INFO    ] Crow/0.1 server is running, local port 8081
 ```
@@ -149,7 +119,7 @@ Go to your browser: http://127.0.0.1:8081
 ## The explorer's command line options
 
 ```
-dcyblocks, New Dinastycoin Blockchain Explorer:
+dcyblocks, Dinastycoin Blockchain Explorer:
   -h [ --help ] [=arg(=1)] (=0)         produce help message
   -t [ --testnet ] [=arg(=1)] (=0)      use testnet blockchain
   -s [ --stagenet ] [=arg(=1)] (=0)     use stagenet blockchain
@@ -206,10 +176,10 @@ Example usage, defined as bash aliases.
 
 ```bash
 # for mainnet explorer
-alias dcyblocksmainnet='~/onion-dinastycoin-blockchain-explorer/build/dcyblocks    --port 8081 --testnet-url "http://139.162.32.245:8082" --enable-pusher --enable-emission-monitor'
+alias dcyblocksmainnet='~/dinastycoin-blockchain-explorer/build/dcyblocks    --port 8081 --testnet-url "http://3.10.19.46:8082" --enable-pusher --enable-emission-monitor'
 
 # for testnet explorer
-alias dcyblockstestnet='~/onion-dinastycoin-blockchain-explorer/build/dcyblocks -t --port 8082 --mainnet-url "http://139.162.32.245:8081" --enable-pusher --enable-emission-monitor'
+alias dcyblockstestnet='~/dinastycoin-blockchain-explorer/build/dcyblocks -t --port 8082 --mainnet-url "http://3.10.19.46:8081" --enable-pusher --enable-emission-monitor'
 ```
 
 ## Enable Dinastycoin emission
@@ -407,7 +377,7 @@ Result analogical to the one above.
 
 
 ```bash
-curl  -w "\n" -X GET "http://139.162.32.245:8081/api/block/1293257"
+curl  -w "\n" -X GET "http://3.10.19.46:8081/api/block/1293257"
 ```
 
 Partial results shown:
@@ -755,7 +725,7 @@ var api_minor = response.data.api & 0xffff;
 Return raw json block data, as represented in Dinastycoin.
 
 ```bash
-curl  -w "\n" -X GET "http://139.162.32.245:8081/api/rawblock/1293257"
+curl  -w "\n" -X GET "http://3.10.19.46:8081/api/rawblock/1293257"
 ```
 
 Example result not shown.
@@ -765,16 +735,11 @@ Example result not shown.
 Return raw json tx data, as represented in Dinastycoin.
 
 ```bash
-curl  -w "\n" -X GET "http://139.162.32.245:8081/api/rawtransaction/6093260dbe79fd6277694d14789dc8718f1bd54457df8bab338c2efa3bb0f03d"
+curl  -w "\n" -X GET "http://3.10.19.46:8081/api/rawtransaction/6093260dbe79fd6277694d14789dc8718f1bd54457df8bab338c2efa3bb0f03d"
 ```
 
 Example result not shown.
 
-## Other dinastycoin examples
-
-Other examples can be found on  [github](https://github.com/dinastyoffreedom?tab=repositories).
-Please know that some of the examples/repositories are not
-finished and may not work as intended.
 
 ## How can you help?
 
