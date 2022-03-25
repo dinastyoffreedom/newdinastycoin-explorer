@@ -67,7 +67,7 @@ using namespace std;
 
 class rpccalls
 {
-    string deamon_url ;
+    string daemon_url ;
     uint64_t timeout_time;
 
     std::chrono::milliseconds timeout_time_ms;
@@ -81,11 +81,13 @@ class rpccalls
 
 public:
 
-    rpccalls(string _deamon_url = "http:://127.0.0.1:37176",
+    using login_opt = boost::optional<epee::net_utils::http::login>;
+    rpccalls(string _daemon_url = "http:://127.0.0.1:37176",
+             login_opt _login = login_opt {},
              uint64_t _timeout = 200000);
 
     bool
-    connect_to_dinastycoin_deamon();
+    connect_to_dinastycoin_daemon();
 
     uint64_t
     get_current_height();
@@ -130,9 +132,9 @@ public:
         {
             std::lock_guard<std::mutex> guard(m_daemon_rpc_mutex);
 
-            if (!connect_to_dinastycoin_deamon())
+            if (!connect_to_dinastycoin_daemon())
             {
-                cerr << "get_alt_blocks: not connected to deamon" << endl;
+                cerr << "get_alt_blocks: not connected to daemon" << endl;
                 return false;
             }
 
@@ -156,15 +158,15 @@ public:
 
             if (!err.empty())
             {
-                cerr << "Error connecting to Dinastycoin deamon due to "
+                cerr << "Error connecting to Dinastycoin daemon due to "
                      << err << endl;
                 return false;
             }
         }
         else
         {
-            cerr << "Error connecting to Dinastycoin deamon at "
-                 << deamon_url << endl;
+            cerr << "Error connecting to Dinastycoin daemon at "
+                 << daemon_url << endl;
             return false;
         }
 

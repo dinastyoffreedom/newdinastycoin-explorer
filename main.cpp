@@ -56,7 +56,7 @@ main(int ac, const char* av[])
     auto port_opt                      = opts.get_option<string>("port");
     auto bindaddr_opt                  = opts.get_option<string>("bindaddr");
     auto bc_path_opt                   = opts.get_option<string>("bc-path");
-    auto deamon_url_opt                = opts.get_option<string>("deamon-url");
+    auto daemon_url_opt                = opts.get_option<string>("daemon-url");
     auto ssl_crt_file_opt              = opts.get_option<string>("ssl-crt-file");
     auto ssl_key_file_opt              = opts.get_option<string>("ssl-key-file");
     auto no_blocks_on_index_opt        = opts.get_option<string>("no-blocks-on-index");
@@ -65,6 +65,7 @@ main(int ac, const char* av[])
     auto mainnet_url                   = opts.get_option<string>("mainnet-url");
     auto mempool_info_timeout_opt      = opts.get_option<string>("mempool-info-timeout");
     auto mempool_refresh_time_opt      = opts.get_option<string>("mempool-refresh-time");
+    auto daemon_login_opt              = opts.get_option<string>("daemon-login");
     auto testnet_opt                   = opts.get_option<bool>("testnet");
     auto stagenet_opt                  = opts.get_option<bool>("stagenet");
     auto enable_key_image_checker_opt  = opts.get_option<bool>("enable-key-image-checker");
@@ -77,7 +78,6 @@ main(int ac, const char* av[])
     auto enable_as_hex_opt             = opts.get_option<bool>("enable-as-hex");
     auto concurrency_opt               = opts.get_option<size_t>("concurrency");
     auto enable_emission_monitor_opt   = opts.get_option<bool>("enable-emission-monitor");
-
 
 
     bool testnet                      {*testnet_opt};
@@ -123,9 +123,41 @@ main(int ac, const char* av[])
     string ssl_crt_file;
     string ssl_key_file;
 
+    xmreg::rpccalls::login_opt daemon_rpc_login {};
+
+
+    if (daemon_login_opt)
+    {
+
+       string user {};
+       epee::wipeable_string pass {};
+
+       string daemon_login = *daemon_login_opt;
+
+       size_t colon_location = daemon_login.find_first_of(':');
+
+       if (colon_location != std::string::npos)
+       {
+           // have colon for user:password
+           user = daemon_login.substr(0, colon_location);
+           pass  = daemon_login.substr(colon_location + 1);
+       }
+       else
+       {
+          user = *daemon_login_opt;
+       }
+
+       daemon_rpc_login = epee::net_utils::http::login {user, pass};
+
+       //cout << "colon_location: " << colon_location << endl;
+       // cout << "user: " << user << endl;
+       // cout << "pass: " << std::string(pass.data(), pass.size()) << endl;
+    }
+
+
     // check if ssl enabled and files exist
 
-    if (ssl_crt_file_opt and ssl_key_file_opt)
+    if (ssl_crt_file_opt && ssl_key_file_opt)
     {
         if (!boost::filesystem::exists(boost::filesystem::path(*ssl_crt_file_opt)))
         {
@@ -160,9 +192,6 @@ main(int ac, const char* av[])
         return EXIT_FAILURE;
     }
 
-    cout << blockchain_path << endl;
-
-
     // create instance of our MicroCore
     // and make pointer to the Blockchain
     xmreg::MicroCore mcore;
@@ -176,12 +205,12 @@ main(int ac, const char* av[])
         return EXIT_FAILURE;
     }
 
-    string deamon_url {*deamon_url_opt};
+    string daemon_url {*daemon_url_opt};
 
-    if (testnet && deamon_url == "http:://127.0.0.1:37176")
-        deamon_url = "http:://127.0.0.1:28081";
-    if (stagenet && deamon_url == "http:://127.0.0.1:37176")
-        deamon_url = "http:://127.0.0.1:38081";
+    if (testnet && daemon_url == "http:://127.0.0.1:37176")
+        daemon_url = "http:://127.0.0.1:28081";
+    if (stagenet && daemon_url == "http:://127.0.0.1:37176")
+        daemon_url = "http:://127.0.0.1:38081";
 
     uint64_t mempool_info_timeout {5000};
 
@@ -218,8 +247,8 @@ main(int ac, const char* av[])
                 = blockchain_path;
         xmreg::CurrentBlockchainStatus::nettype
                 = nettype;
-        xmreg::CurrentBlockchainStatus::deamon_url
-                = deamon_url;
+        xmreg::CurrentBlockchainStatus::daemon_url
+                = daemon_url;
         xmreg::CurrentBlockchainStatus::set_blockchain_variables(
                 &mcore, core_storage);
 
@@ -235,8 +264,10 @@ main(int ac, const char* av[])
             = blockchain_path;
     xmreg::MempoolStatus::nettype
             = nettype;
-    xmreg::MempoolStatus::deamon_url
-            = deamon_url;
+    xmreg::MempoolStatus::daemon_url
+            = daemon_url;
+    xmreg::MempoolStatus::login
+            = daemon_rpc_login;
     xmreg::MempoolStatus::set_blockchain_variables(
             &mcore, core_storage);
 
@@ -268,7 +299,7 @@ main(int ac, const char* av[])
     // contains logic for the website
     xmreg::page dcyblocks(&mcore,
                           core_storage,
-                          deamon_url,
+                          daemon_url,
                           nettype,
                           enable_pusher,
                           enable_randomx,
@@ -281,7 +312,8 @@ main(int ac, const char* av[])
                           mempool_info_timeout,
                           *testnet_url,
                           *stagenet_url,
-                          *mainnet_url);
+                          *mainnet_url,
+                          daemon_rpc_login);
 
     // crow instance
     crow::SimpleApp app;

@@ -168,8 +168,10 @@ dcyblocks, Dinastycoin Blockchain Explorer:
                                         functionality
   --ssl-key-file arg                    path to key file for ssl (https)
                                         functionality
-  -d [ --deamon-url ] arg (=http:://127.0.0.1:37176)
+  -d [ --daemon-url ] arg (=http:://127.0.0.1:37176)
                                         Dinastycoin daemon url
+  --daemon-login arg                    Specify username[:password] for daemon 
+                                        RPC client
 ```
 
 Example usage, defined as bash aliases.

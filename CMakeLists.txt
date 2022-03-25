@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.0.2)
 
 set(PROJECT_NAME
         dcyblocks)
@@ -71,17 +71,34 @@ find_package(Boost COMPONENTS
 find_package(Sanitizers)
 
 if(APPLE)
-    include_directories(/usr/local/opt/openssl/include)
-    link_directories(/usr/local/opt/openssl/lib)
+    include_directories(/usr/local/opt/openssl@1.1/include)
+    link_directories(/usr/local/opt/openssl@1.1/lib)
+    link_directories(/usr/local/lib)
 endif()
 
+MESSAGE(STATUS "Looking for libunbound") # FindUnbound.cmake from dinastycoin repo
 
-if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin" OR WIN32)
+FIND_PATH(UNBOUND_INCLUDE_DIR
+  NAMES unbound.h
+  PATH_SUFFIXES include/ include/unbound/
+  PATHS "${PROJECT_SOURCE_DIR}"
+  ${UNBOUND_ROOT}
+  $ENV{UNBOUND_ROOT}
+  /usr/local/
+  /usr/
+)
+
+find_library (UNBOUND_LIBRARY unbound)
+if (WIN32 OR (${UNBOUND_LIBRARY} STREQUAL "UNBOUND_LIBRARY-NOTFOUND"))
     add_library(unbound STATIC IMPORTED)
     set_property(TARGET unbound PROPERTY IMPORTED_LOCATION ${DINASTYCOIN_BUILD_DIR}/external/unbound/libunbound.a)
 endif()
 
-
+if("${Dcy_WALLET-CRYPTO_LIBRARIES}" STREQUAL "Dcy_WALLET-CRYPTO_LIBRARY-NOTFOUND")
+  set(WALLET_CRYPTO "")
+else()
+  set(WALLET_CRYPTO ${Dcy_WALLET-CRYPTO_LIBRARIES})
+endif()
 
 # include boost headers
 include_directories(${Boost_INCLUDE_DIRS})
@@ -123,21 +140,24 @@ set(LIBRARIES
         mstch
         wallet
         blockchain_db
+        device
+        ${WALLET_CRYPTO}
         cryptonote_core
-        cryptonote_protocol
         cryptonote_basic
+        cryptonote_format_utils_basic
+        cryptonote_protocol
         multisig
         daemonizer
-        cncrypto
         blocks
         lmdb
         ringct
         ringct_basic
-        device
         common
         mnemonics
         easylogging
         checkpoints
+        cncrypto        
+        miniupnpc
         version
         epee
         hardforks
@@ -156,8 +176,16 @@ else()
     set(LIBRARIES ${LIBRARIES} atomic)
 endif()
 
+find_library(UNWIND_LIBRARY unwind)
+if (${UNWIND_LIBRARY} STREQUAL "UNWIND_LIBRARY-NOTFOUND")
+  message (STATUS "unwind library not found")
+  set (UNWIND_LIBRARY "")
+else ()
+  message (STATUS "Found unwind library: ${UNWIND_LIBRARY}")
+endif ()
+
 if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND NOT WIN32)
-    set(LIBRARIES ${LIBRARIES} unwind)
+    set(LIBRARIES ${LIBRARIES} ${UNWIND_LIBRARY})
 endif()
 
 if (WIN32)

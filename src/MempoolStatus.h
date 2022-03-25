@@ -7,6 +7,7 @@
 
 
 #include "MicroCore.h"
+#include "rpccalls.h"
 
 #include <boost/algorithm/string.hpp>
 
@@ -45,10 +46,6 @@ struct MempoolStatus
         string xmr_outputs_str;
         string timestamp_str;
         string txsize;
-
-        char     pID; // '-' - no payment ID,
-                      // 'l' - legacy, long 64 character payment id,
-                      // 'e' - encrypted, short, from integrated addresses
     };
 
 
@@ -128,8 +125,10 @@ struct MempoolStatus
     static atomic<uint64_t> mempool_size; // size in bytes.
 
     static bf::path blockchain_path;
-    static string deamon_url;
+    static string daemon_url;
     static cryptonote::network_type nettype;
+
+    static rpccalls::login_opt login;
 
     // make object for accessing the blockchain here
     static MicroCore* mcore;

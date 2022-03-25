@@ -76,7 +76,7 @@ extern  __thread randomx_vm *rx_vm;
 #define TMPL_MY_CHECKRAWOUTPUTKEYS  TMPL_DIR "/checkrawoutputkeys.html"
 
 #define ONIONEXPLORER_RPC_VERSION_MAJOR 1
-#define ONIONEXPLORER_RPC_VERSION_MINOR 1
+#define ONIONEXPLORER_RPC_VERSION_MINOR 2
 #define MAKE_ONIONEXPLORER_RPC_VERSION(major,minor) (((major)<<16)|(minor))
 #define ONIONEXPLORER_RPC_VERSION \
     MAKE_ONIONEXPLORER_RPC_VERSION(ONIONEXPLORER_RPC_VERSION_MAJOR, ONIONEXPLORER_RPC_VERSION_MINOR)
@@ -323,18 +323,12 @@ struct tx_details
 
     bool has_additional_tx_pub_keys {false};
 
-    char     pID; // '-' - no payment ID,
-                  // 'l' - legacy, long 64 character payment id,
-                  // 'e' - encrypted, short, from integrated addresses
-                  // 's' - sub-address (avaliable only for multi-output txs)
     uint64_t unlock_time;
     uint64_t no_confirmations;
     vector<uint8_t> extra;
 
     crypto::hash  payment_id  = null_hash; // normal
     crypto::hash8 payment_id8 = null_hash8; // encrypted
-
-    string payment_id_as_ascii;
 
     std::vector<std::vector<crypto::signature>> signatures;
 
@@ -395,7 +389,6 @@ struct tx_details
                 {"version"           , static_cast<uint64_t>(version)},
                 {"has_payment_id"    , payment_id  != null_hash},
                 {"has_payment_id8"   , payment_id8 != null_hash8},
-                {"pID"               , string {pID}},
                 {"payment_id"        , pod_to_hex(payment_id)},
                 {"confirmations"     , no_confirmations},
                 {"extra"             , get_extra_str()},
@@ -505,7 +498,7 @@ public:
 
 page(MicroCore* _mcore,
      Blockchain* _core_storage,
-     string _deamon_url,
+     string _daemon_url,
      cryptonote::network_type _nettype,
      bool _enable_pusher,
      bool _enable_randomx,
@@ -518,10 +511,11 @@ page(MicroCore* _mcore,
      uint64_t _mempool_info_timeout,
      string _testnet_url,
      string _stagenet_url,
-     string _mainnet_url)
+     string _mainnet_url,
+     rpccalls::login_opt _daemon_rpc_login)
         : mcore {_mcore},
           core_storage {_core_storage},
-          rpc {_deamon_url},
+          rpc {_daemon_url, _daemon_rpc_login},
           server_timestamp {std::time(nullptr)},
           nettype {_nettype},
           enable_pusher {_enable_pusher},
@@ -583,9 +577,9 @@ index2(uint64_t page_no = 0, bool refresh_page = false)
 {
 
     // we get network info, such as current hash rate
-    // but since this makes a rpc call to deamon, we make it as an async
+    // but since this makes a rpc call to daemon, we make it as an async
     // call. this way we dont have to wait with execution of the rest of the
-    // index2 method, until deamon gives as the required result.
+    // index2 method, until daemon gives as the required result.
     std::future<json> network_info_ftr = std::async(std::launch::async, [&]
     {
         json j_info;
@@ -938,7 +932,6 @@ mempool(bool add_header_and_footer = false, uint64_t no_of_mempool_tx = 25)
                 {"xmr_outputs"     , mempool_tx.xmr_outputs_str},
                 {"no_inputs"       , mempool_tx.no_inputs},
                 {"no_outputs"      , mempool_tx.no_outputs},
-                {"pID"             , string {mempool_tx.pID}},
                 {"no_nonrct_inputs", mempool_tx.num_nonrct_inputs},
                 {"mixin"           , mempool_tx.mixin_no},
                 {"txsize"          , mempool_tx.txsize}
@@ -1899,6 +1892,8 @@ show_my_outputs(string tx_hash_str,
     boost::trim(xmr_address_str);
     boost::trim(viewkey_str);
     boost::trim(raw_tx_data);
+
+    cout << "tx hash not provided" << endl;
 
     if (tx_hash_str.empty())
     {
@@ -4508,10 +4503,41 @@ json_transaction(string tx_hash_str)
 
         json& mixins = inputs.back()["mixins"];
 
-        for (const output_data_t& output_data: outputs)
+        // mixin counter
+        size_t count = 0;
+
+        for (const uint64_t& abs_offset: absolute_offsets)
         {
+
+            // get basic information about mixn's output
+            cryptonote::output_data_t output_data = outputs.at(count++);
+
+            tx_out_index tx_out_idx;
+
+            try
+            {
+                // get pair pair<crypto::hash, uint64_t> where first is tx hash
+                // and second is local index of the output i in that tx
+                tx_out_idx = core_storage->get_db()
+                        .get_output_tx_and_index(in_key.amount, abs_offset);
+            }
+            catch (const OUTPUT_DNE& e)
+            {
+
+                string out_msg = fmt::format(
+                        "Output with amount {:d} and index {:d} does not exist!",
+                        in_key.amount, abs_offset);
+
+                cerr << out_msg << '\n';
+
+                break;
+            }
+
+            string out_pub_key_str = pod_to_hex(output_data.pubkey);
+
             mixins.push_back(json {
                     {"public_key"  , pod_to_hex(output_data.pubkey)},
+                    {"tx_hash"     , pod_to_hex(tx_out_idx.first)},
                     {"block_no"    , output_data.height},
             });
         }
@@ -5413,6 +5439,14 @@ json_outputs(string tx_hash_str,
 
     } // for (pair<txout_to_key, uint64_t>& outp: txd.output_pub_keys)
 
+    // if we don't already have the tx_timestamp from the mempool
+    // then read it from the block that the transaction is in
+    if (!tx_timestamp && txd.blk_height > 0) {
+        block blk;
+        mcore->get_block_by_height(txd.blk_height, blk);
+        tx_timestamp = blk.timestamp;
+    }
+
     // return parsed values. can be use to double
     // check if submited data in the request
     // matches to what was used to produce response.
@@ -5420,6 +5454,8 @@ json_outputs(string tx_hash_str,
     j_data["address"]  = pod_to_hex(address_info.address);
     j_data["viewkey"]  = pod_to_hex(prv_view_key);
     j_data["tx_prove"] = tx_prove;
+    j_data["tx_confirmations"] = txd.no_confirmations;
+    j_data["tx_timestamp"] = tx_timestamp;
 
     j_response["status"] = "success";
 
@@ -6043,9 +6079,6 @@ construct_tx_context(transaction tx, uint16_t with_ring_signatures = 0)
 
     string tx_json = obj_to_json_str(tx);
 
-    // use this regex to remove all non friendly characters in payment_id_as_ascii string
-    static std::regex e {"[^a-zA-Z0-9 ./\\\\!]"};
-
     double tx_size = static_cast<double>(txd.size) / 1024.0;
 
     double payed_for_kB = XMR_AMOUNT(txd.fee) / tx_size;
@@ -6074,7 +6107,6 @@ construct_tx_context(transaction tx, uint16_t with_ring_signatures = 0)
             {"has_payment_id8"       , txd.payment_id8 != null_hash8},
             {"confirmations"         , txd.no_confirmations},
             {"payment_id"            , pid_str},
-            {"payment_id_as_ascii"   , remove_bad_chars(txd.payment_id_as_ascii)},
             {"payment_id8"           , pid8_str},
             {"extra"                 , txd.get_extra_str()},
             {"with_ring_signatures"  , static_cast<bool>(
@@ -6541,31 +6573,12 @@ get_tx_details(const transaction& tx,
         }
     }
 
-    txd.pID = '-'; // no payment ID
-
     get_payment_id(tx, txd.payment_id, txd.payment_id8);
 
     // get tx size in bytes
     txd.size = get_object_blobsize(tx);
 
     txd.extra = tx.extra;
-
-    if (txd.payment_id != null_hash)
-    {
-        txd.payment_id_as_ascii = std::string(txd.payment_id.data, crypto::HASH_SIZE);
-        txd.pID = 'l'; // legacy payment id
-    }
-    else if (txd.payment_id8 != null_hash8)
-    {
-        txd.pID = 'e'; // encrypted payment id
-    }
-    else if (txd.additional_pks.empty() == false)
-    {
-        // if multioutput tx have additional public keys,
-        // mark it so that it represents that it has at least
-        // one sub-address
-        txd.pID = 's';
-    }
 
     // get tx signatures for each input
     txd.signatures = tx.signatures;
