@@ -32,7 +32,7 @@ if (NOT DINASTYCOIN_BUILD_DIR)
    if (NOT EXISTS ${DINASTYCOIN_BUILD_DIR})   
         # try different location   
         message(STATUS "Trying different folder for dinastycoin libraries")
-        set(DINASTYCOIN_BUILD_DIR ${DINASTYCOIN_SOURCE_DIR}/build/Linux/master/release/
+        set(DINASTYCOIN_BUILD_DIR ${DINASTYCOIN_SOURCE_DIR}/build/Linux/main/release/
             CACHE PATH "Path to the build directory for Dinastycoin" FORCE)
     endif()
 
